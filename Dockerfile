@@ -2,7 +2,7 @@ FROM node:22-alpine
 ENV NODE_ENV production
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --omit=dev && npm cache clean --force
+RUN npm install --package-lock=false --omit=dev
 COPY . .
 EXPOSE 3000
 USER node
