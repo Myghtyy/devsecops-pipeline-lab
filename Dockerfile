@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:14
 WORKDIR /app
 COPY package.json ./
 RUN npm install --package-lock=false --omit=dev
