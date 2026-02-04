@@ -73,22 +73,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Build Secure Image
         run: docker build -f Dockerfile.secure -t my-app:secure .
+
+      # We must download the template here too because Jobs run on different runners
+      - name: Download Trivy HTML Template
+        run: |
+          mkdir -p trivy-templates
+          curl -sLo trivy-templates/html.tpl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
+
       - name: Run Trivy (Secure)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'my-app:secure'
           format: 'template'
-          template: '@/contrib/html.tpl'
+          template: '@trivy-templates/html.tpl' # Use the local path we just downloaded
           output: 'secure-report.html'
+          exit-code: '0'
           ignore-unfixed: true
-      - name: Upload Secure PDF
+
+      - name: Install PDF Export Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install weasyprint --break-system-packages
+
+      - name: Generate Secure PDF
         if: always()
         run: |
+          sed -i 's|</head>|<style>@page { size: A4 landscape; margin: 0.5cm; } table { table-layout: fixed; width: 100% !important; font-size: 8pt !important; } td, th, a { word-wrap: break-word; overflow-wrap: break-word; word-break: break-all; white-space: normal !important; }</style></head>|' secure-report.html
           weasyprint secure-report.html Secure-Audit.pdf
+
       - name: Archive Secure Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Secure-Remediation-Report
           path: Secure-Audit.pdf
+      
+      - name: Final Security Gate (Secure)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 1 my-app:secure
