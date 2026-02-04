@@ -36,11 +36,14 @@ jobs:
           output: 'security-report.html'
           exit-code: '0'
           
-      - name: Convert HTML to PDF
-        uses: psf/black-action@master
-        with:
-          html_file: 'security-report.html'
-          pdf_file: 'Sneh-Security-Audit.pdf'
+      - name: Install PDF Export Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc python3-pip
+          pip3 install weasyprint
+
+      - name: Export PDF Report
+        run: weasyprint security-report.html Sneh-Security-Audit.pdf
 
       - name: Upload PDF Report
         uses: actions/upload-artifact@v4
