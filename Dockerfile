@@ -1,26 +1,13 @@
-# Stage 1: Build the app
-FROM node:14.17.0 AS builder
+FROM node:14.21.3-bullseye AS builder
 WORKDIR /app
 COPY package.json ./
 RUN npm install 
-
-# Stage 2: Final Image - Ubuntu 20.04 (Standard Support)
-FROM ubuntu:20.04
-
-# Avoid prompts during package installation
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install Node.js 14 and basic tools
-RUN apt-get update && \
-    apt-get install -y curl && \
-    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
-    apt-get install -y nodejs
+FROM node:14.21.3-bullseye-slim
 
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY . .
 
-# Security Best Practice: Run as non-root
 RUN groupadd -r sneh && useradd -r -g sneh sneh
 USER sneh
 
