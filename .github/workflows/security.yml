@@ -3,84 +3,53 @@ name: DevSecOps-Security-Pipeline
 on: [push]
 
 jobs:
-  security-scan:
+  # JOB 1: THE INSECURE AUDIT
+  vulnerable-audit:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '14'
-
-      - name: Install Dependencies
-        run: npm install --package-lock=false --omit=dev
-
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-
-      - name: Build Docker Image
-        run: docker build -t my-app:latest .
-
-      - name: Download Trivy HTML Template
-        run: |
-          mkdir -p trivy-templates
-          curl -sLo trivy-templates/html.tpl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
-
-      - name: Run Trivy vulnerability scanner (Export Report)
+      - uses: actions/checkout@v3
+      - name: Build Insecure Image
+        run: docker build -t my-app:insecure .
+      - name: Run Trivy (Insecure)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'my-app:latest'
+          image-ref: 'my-app:insecure'
           format: 'template'
-          template: '@trivy-templates/html.tpl'
-          output: 'report.html'
-          exit-code: '0'
-
-      - name: Install PDF Export Tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip
-          pip3 install weasyprint --break-system-packages
-
-      - name: Export PDF Report
+          template: '@/contrib/html.tpl'
+          output: 'insecure-report.html'
+          ignore-unfixed: false
+      - name: Upload Insecure PDF
         if: always()
         run: |
-          # Injecting even more aggressive word-breaking CSS
-          sed -i 's|</head>|<style>@page { size: A4 landscape; margin: 0.5cm; } table { table-layout: fixed; width: 100% !important; font-size: 8pt !important; } td, th, a { word-wrap: break-word; overflow-wrap: break-word; word-break: break-all; white-space: normal !important; }</style></head>|' report.html
-          
-          # Convert to PDF
-          weasyprint report.html Sneh-Security-Audit.pdf
-          
-      - name: Upload Security Report
-        if: always() 
+          # Use your previous weasyprint logic here
+          weasyprint insecure-report.html Insecure-Audit.pdf
+      - name: Archive Insecure Report
         uses: actions/upload-artifact@v4
         with:
-          name: Professional-Security-Audit
-          path: Sneh-Security-Audit.pdf
+          name: Insecure-Audit-Report
+          path: Insecure-Audit.pdf
 
-      - name: Final Security Gate
+  # JOB 2: THE SECURE REMEDIATION
+  secure-remediation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Secure Image
+        run: docker build -f Dockerfile.secure -t my-app:secure .
+      - name: Run Trivy (Secure)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'my-app:secure'
+          format: 'template'
+          template: '@/contrib/html.tpl'
+          output: 'secure-report.html'
+          ignore-unfixed: true
+      - name: Upload Secure PDF
+        if: always()
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-          aquasec/trivy:latest image --severity HIGH,CRITICAL --ignore-unfixed false --exit-code 1 my-app:latest
-
-      - name: Notify Discord on Failure
-        if: failure()
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-          --data '{
-            "embeds": [{
-              "title": "🚨 Security Build Failed",
-              "description": "High or Critical vulnerabilities were detected in the latest push. Deployment has been blocked.",
-              "color": 15158332,
-              "fields": [
-                { "name": "Repository", "value": "${{ github.repository }}", "inline": true },
-                { "name": "Commit", "value": "${{ github.sha }}", "inline": true }
-              ]
-            }]
-          }' ${{ secrets.DISCORD_WEBHOOK }}
+          weasyprint secure-report.html Secure-Audit.pdf
+      - name: Archive Secure Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Secure-Remediation-Report
+          path: Secure-Audit.pdf
