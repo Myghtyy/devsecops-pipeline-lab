@@ -75,7 +75,8 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Build Secure Image
-        run: docker build -f Dockerfile.secure -t my-app:secure .
+        run: |
+          docker build -t my-app:secure -f Dockerfile.secure .
 
       # We must download the template here too because Jobs run on different runners
       - name: Download Trivy HTML Template
