@@ -10,14 +10,34 @@ jobs:
       - uses: actions/checkout@v3
       - name: Build Insecure Image
         run: docker build -t my-app:insecure .
+
+      - name: Download Trivy HTML Template
+        run: |
+          mkdir -p trivy-templates
+          curl -sLo trivy-templates/html.tpl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
+      
       - name: Run Trivy (Insecure)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'my-app:insecure'
           format: 'template'
-          template: '@/contrib/html.tpl'
+          template: '@trivy-templates/html.tpl'
           output: 'insecure-report.html'
-          ignore-unfixed: false
+          exit-code: '0'
+
+      - name: Install PDF Export Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install weasyprint --break-system-packages
+
+      - name: Export PDF Report
+        if: always()
+        run: |
+          sed -i 's|</head>|<style>@page { size: A4 landscape; margin: 0.5cm; } table { table-layout: fixed; width: 100% !important; font-size: 8pt !important; } td, th, a { word-wrap: break-word; overflow-wrap: break-word; word-break: break-all; white-space: normal !important; }</style></head>|' insecure-report.html
+          
+          # Convert to PDF
+          weasyprint insecure-report.html Security-Audit-failure.pdf
       - name: Upload Insecure PDF
         if: always()
         run: |
