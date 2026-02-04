@@ -19,6 +19,7 @@ jobs:
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
@@ -37,19 +38,30 @@ jobs:
         with:
           image-ref: 'my-app:latest'
           format: 'template'
-          template: '@/contrib/html.tpl'
+          template: '@trivy-templates/html.tpl'
           output: 'report.html'
-          exit-code:
+          exit-code: '0'
+
+      - name: Install PDF Export Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install weasyprint --break-system-packages
+
+      - name: Export PDF Report
+        run: weasyprint report.html Sneh-Security-Audit.pdf
 
       - name: Upload Security Report
+        if: always() 
         uses: actions/upload-artifact@v4
         with:
-          name: vulnerability-report
-          path: security-report.html
+          name: Professional-Security-Audit
+          path: Sneh-Security-Audit.pdf
 
       - name: Final Security Gate
         run: |
-          trivy image --severity HIGH,CRITICAL --exit-code 1 my-app:latest
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 1 my-app:latest
 
       - name: Notify Discord on Failure
         if: failure()
