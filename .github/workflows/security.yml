@@ -27,21 +27,26 @@ jobs:
       - name: Build Docker Image
         run: docker build -t my-app:latest .
 
-      - name: Generate Security Summary
+      - name: Generate HTML Security Report
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'my-app:latest'
-          format: 'table'
-          output: 'trivy-results.txt'
+          format: 'template'
+          template: '@/contrib/html.tpl'
+          output: 'security-report.html'
           exit-code: '0'
+          
+      - name: Convert HTML to PDF
+        uses: danhellem/github-actions-html-to-pdf@v1.0
+        with:
+          html_file: 'security-report.html'
+          pdf_file: 'Sneh-Security-Audit.pdf'
 
-      - name: Publish Results to GitHub Summary
-        run: |
-          echo "## 🛡️ Security Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "### Trivy Container Scan" >> $GITHUB_STEP_SUMMARY
-          echo '```text' >> $GITHUB_STEP_SUMMARY
-          cat trivy-results.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+      - name: Upload PDF Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Professional-Security-Audit
+          path: Sneh-Security-Audit.pdf
 
       - name: Final Security Gate
         uses: aquasecurity/trivy-action@master
