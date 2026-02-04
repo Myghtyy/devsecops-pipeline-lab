@@ -37,7 +37,7 @@ jobs:
           exit-code: '0'
           
       - name: Convert HTML to PDF
-        uses: danhellem/github-actions-html-to-pdf@v1.0
+        uses: psf/black-action@master
         with:
           html_file: 'security-report.html'
           pdf_file: 'Sneh-Security-Audit.pdf'
