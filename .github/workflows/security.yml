@@ -27,28 +27,28 @@ jobs:
       - name: Build Docker Image
         run: docker build -t my-app:latest .
 
+      - name: Download Trivy HTML Template
+        run: |
+          mkdir -p trivy-templates
+          curl -sLo trivy-templates/html.tpl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
+
       - name: Generate HTML Security Report
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'my-app:latest'
           format: 'template'
-          template: '@contrib/html.tpl'
+          template: '@trivy-templates/html.tpl'
           output: 'report.html'
           exit-code: '0'
-          
+
       - name: Install PDF Export Tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y pandoc python3-pip
-          pip3 install weasyprint
+          sudo apt-get install -y python3-pip
+          pip3 install weasyprint --break-system-packages
 
       - name: Export PDF Report
-        run: |
-          if [ -f report.html ]; then
-            weasyprint report.html Sneh-Security-Audit.pdf
-          else
-            echo "HTML report was not generated!" && exit 1
-          fi
+        run: weasyprint report.html Sneh-Security-Audit.pdf
 
       - name: Upload PDF Report
         uses: actions/upload-artifact@v4
