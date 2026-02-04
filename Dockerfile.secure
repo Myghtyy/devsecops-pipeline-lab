@@ -1,0 +1,20 @@
+# Stage 1: Build with modern Node 22
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+# Use overrides in package.json if needed, or just install latest
+RUN npm install 
+
+# Stage 2: Final Secure Image
+FROM node:22-alpine
+WORKDIR /app
+# Copy only what is needed
+COPY --from=builder /app/node_modules ./node_modules
+COPY . .
+
+# Run as non-root (Best Practice)
+RUN addgroup -S sneh && adduser -S sneh -G sneh
+USER sneh
+
+EXPOSE 3000
+CMD ["node", "index.js"]
