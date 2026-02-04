@@ -36,18 +36,36 @@ jobs:
         run: |
           sed -i 's|</head>|<style>@page { size: A4 landscape; margin: 0.5cm; } table { table-layout: fixed; width: 100% !important; font-size: 8pt !important; } td, th, a { word-wrap: break-word; overflow-wrap: break-word; word-break: break-all; white-space: normal !important; }</style></head>|' insecure-report.html
           
-          # Convert to PDF
-          weasyprint insecure-report.html Security-Audit-failure.pdf
       - name: Upload Insecure PDF
         if: always()
         run: |
-          # Use your previous weasyprint logic here
-          weasyprint insecure-report.html Insecure-Audit.pdf
       - name: Archive Insecure Report
         uses: actions/upload-artifact@v4
         with:
           name: Insecure-Audit-Report
           path: Insecure-Audit.pdf
+
+      - name: Final Security Gate
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest image --severity HIGH,CRITICAL --ignore-unfixed false --exit-code 1 my-app:insecure
+
+      - name: Notify Discord on Failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{
+            "embeds": [{
+              "title": "🚨 Security Build Failed",
+              "description": "High or Critical vulnerabilities were detected in the latest push. Deployment has been blocked.",
+              "color": 15158332,
+              "fields": [
+                { "name": "Repository", "value": "${{ github.repository }}", "inline": true },
+                { "name": "Commit", "value": "${{ github.sha }}", "inline": true }
+              ]
+            }]
+          }' ${{ secrets.DISCORD_WEBHOOK }}
+      
 
   # JOB 2: THE SECURE REMEDIATION
   secure-remediation:
