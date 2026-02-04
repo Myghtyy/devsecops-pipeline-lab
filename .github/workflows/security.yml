@@ -50,12 +50,12 @@ jobs:
 
       - name: Export PDF Report
         run: |
-          # 1. Inject CSS for Landscape orientation and Table fitting
-          sed -i 's|</head>|<style>@page { size: A4 landscape; margin: 0.5cm; } table { table-layout: fixed; width: 100% !important; word-wrap: break-word; font-size: 8pt !important; } th, td { word-wrap: break-word; overflow-wrap: break-word; }</style></head>|' report.html
+          # Injecting even more aggressive word-breaking CSS
+          sed -i 's|</head>|<style>@page { size: A4 landscape; margin: 0.5cm; } table { table-layout: fixed; width: 100% !important; font-size: 8pt !important; } td, th, a { word-wrap: break-word; overflow-wrap: break-word; word-break: break-all; white-space: normal !important; }</style></head>|' report.html
           
-          # 2. Convert to PDF
+          # Convert to PDF
           weasyprint report.html Sneh-Security-Audit.pdf
-
+          
       - name: Upload Security Report
         if: always() 
         uses: actions/upload-artifact@v4
