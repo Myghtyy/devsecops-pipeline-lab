@@ -32,8 +32,8 @@ jobs:
         with:
           image-ref: 'my-app:latest'
           format: 'template'
-          template: '@/contrib/html.tpl'
-          output: 'security-report.html'
+          template: '@contrib/html.tpl'
+          output: 'report.html'
           exit-code: '0'
           
       - name: Install PDF Export Tools
@@ -43,7 +43,12 @@ jobs:
           pip3 install weasyprint
 
       - name: Export PDF Report
-        run: weasyprint security-report.html Sneh-Security-Audit.pdf
+        run: |
+          if [ -f report.html ]; then
+            weasyprint report.html Sneh-Security-Audit.pdf
+          else
+            echo "HTML report was not generated!" && exit 1
+          fi
 
       - name: Upload PDF Report
         uses: actions/upload-artifact@v4
