@@ -1,4 +1,4 @@
-FROM node:14.17.0
+FROM node:14.17.0 AS builder
 WORKDIR /app
 COPY package.json ./
 RUN npm install --package-lock=false --omit=dev
