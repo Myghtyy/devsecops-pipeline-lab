@@ -45,5 +45,10 @@ Upon every push, the pipeline generates:
 * `Insecure-Audit-Report.pdf`: A detailed list of vulnerabilities for remediation planning.
 * `Secure-Remediation-Report.pdf`: Evidence of a clean, compliant build.
 
+| Before (Vulnerable) | After (Remediated) |
+| :---: | :---: |
+| ![Insecure Scan](./Docs/screenshots/insecure-scan.png) | ![Secure Scan](./Docs/screenshots/secure-scan.png) |
+| *18 High/Critical Vulnerabilities* | *0 Vulnerabilities - Build Passed* |
+
 ---
 Created by Sneh Todarmal - 2026 DevSecOps Lab
