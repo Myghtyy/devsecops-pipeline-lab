@@ -1,3 +1,4 @@
+![Secure Status](https://img.shields.io/github/check-runs/Myghtyy/devsecops-pipeline-lab/main?label=Secure%20Remediation)
 # 🛡️ Multi-Stage DevSecOps Security Pipeline
 
 A production-ready CI/CD pipeline demonstrating the transition from a vulnerable "Legacy" environment to a hardened, zero-vulnerability containerized application.
