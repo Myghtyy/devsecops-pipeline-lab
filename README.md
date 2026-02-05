@@ -24,7 +24,14 @@ The pipeline is designed as a **Security Gate**. If High or Critical vulnerabili
 | **Base OS** | Ubuntu 18.04 (EOL) | Alpine Linux (Hardened) |
 | **Node Version** | Legacy | Node 22 (Current LTS) |
 | **Dependency Logic** | Vulnerable versions | npm Overrides (Force-patched) |
-| **Trivy Result** | ~18 High/Critical | **0 Vulnerabilities** |
+| **Trivy Result** | ~12 High/Critical | **0 Vulnerabilities** |
+
+## 🔍 Security Analysis Strategy: The Trivy Approach
+
+I utilized **Trivy** as the primary security engine for this pipeline because of its ability to perform three critical types of scans in a single pass:
+
+1.  **SCA (Software Composition Analysis):** Scanning `package.json` for vulnerable Node.js libraries.
+2.  **Container Scanning:** Identifying vulnerabilities in the base OS layers (Ubuntu vs. Alpine).
 
 ## 🛡️ Security Remediation Steps
 To achieve a green build, the following hardening steps were implemented:
@@ -33,7 +40,7 @@ To achieve a green build, the following hardening steps were implemented:
 3.  **Dependency Patching:** Used `npm overrides` to force-patch sub-dependencies (`tar`, `glob`, `qs`) that were not directly upgradeable via top-level packages.
 4.  **Automated Compliance:** Integrated PDF report generation into the CI/CD flow for audit trail maintenance.
 
-## 📁 Artifacts
+## Results
 Upon every push, the pipeline generates:
 * `Insecure-Audit-Report.pdf`: A detailed list of vulnerabilities for remediation planning.
 * `Secure-Remediation-Report.pdf`: Evidence of a clean, compliant build.
