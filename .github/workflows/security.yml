@@ -79,7 +79,6 @@ jobs:
         run: |
           docker build -t my-app:secure -f Dockerfile.secure .
 
-      # We must download the template here too because Jobs run on different runners
       - name: Download Trivy HTML Template
         run: |
           mkdir -p trivy-templates
@@ -90,7 +89,7 @@ jobs:
         with:
           image-ref: 'my-app:secure'
           format: 'template'
-          template: '@trivy-templates/html.tpl' # Use the local path we just downloaded
+          template: '@trivy-templates/html.tpl' 
           output: 'secure-report.html'
           exit-code: '0'
           ignore-unfixed: true
